@@ -5,9 +5,12 @@
 # I haven't tested this on non nvidia GPUs. Alternatively, you should be able
 # to run with host drivers.
 FROM rust:1.86 AS builder
-RUN git clone https://github.com/ArthurBrussee/brush /brush
 WORKDIR /brush
-RUN cargo build --release -p brush-cli
+
+# Copy the workspace sources so we can build with local changes.
+COPY . .
+
+RUN cargo build --release -p brush-cli --locked
 
 FROM debian:bookworm-slim
 

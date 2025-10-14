@@ -1,0 +1,6 @@
+# Speed up Docker builds by skipping local artifacts and tooling caches.
+target
+node_modules
+.git
+.vscode
+.zed
