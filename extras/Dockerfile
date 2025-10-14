@@ -5,30 +5,20 @@
 # I haven't tested this on non nvidia GPUs. Alternatively, you should be able
 # to run with host drivers.
 FROM rust:1.86 AS builder
-RUN git clone https://github.com/ArthurBrussee/brush
-RUN cargo build --release --manifest-path ./brush/Cargo.toml
+RUN git clone https://github.com/ArthurBrussee/brush /brush
+WORKDIR /brush
+RUN cargo build --release -p brush-cli
 
-FROM ubuntu:22.04
+FROM debian:bookworm-slim
 
-# Install dependencies.
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
-    build-essential \
-    cmake \
-    libvulkan1 \
-    vulkan-tools \
-    mesa-vulkan-drivers \
-    nvidia-driver-570 \
-    && apt-get clean \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /workdir
-COPY --from=builder ./brush/target/release/brush_app /workdir
-WORKDIR /workdir
-
-# Below command creates home dir for 1000 UID user
 RUN useradd -m -u 1000 clouduser
-RUN chown -R 1000:root /workdir && chmod -R 775 /workdir
-
-# Launch training.
 USER clouduser
-ENTRYPOINT ["./brush_app"]
+WORKDIR /home/clouduser
+
+COPY --from=builder /brush/target/release/brush-cli /usr/local/bin/brush-cli
+
+ENTRYPOINT ["brush-cli"]
