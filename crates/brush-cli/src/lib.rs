@@ -1,10 +1,11 @@
 #![recursion_limit = "256"]
 
-use brush_process::{config::ProcessArgs, message::ProcessMessage};
+use brush_process::{config::ProcessArgs, message::ProcessMessage, process::process_stream};
 use brush_vfs::DataSource;
 use clap::{Error, Parser, builder::ArgPredicate, error::ErrorKind};
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
+use tokio::sync::oneshot;
 use tokio_stream::{Stream, StreamExt};
 use tracing::trace_span;
 
@@ -219,4 +220,19 @@ pub async fn process_ui(
     );
 
     Ok(())
+}
+
+/// Run the headless processing pipeline used by the CLI and the application binary
+/// when no viewer window should be launched.
+pub async fn run_headless(
+    source: DataSource,
+    process_args: ProcessArgs,
+) -> Result<(), anyhow::Error> {
+    let device = brush_render::burn_init_setup().await;
+
+    let (sender, args_receiver) = oneshot::channel();
+    let _ = sender.send(process_args.clone());
+
+    let stream = process_stream(source, args_receiver, device);
+    process_ui(stream, process_args).await
 }

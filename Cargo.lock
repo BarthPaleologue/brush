@@ -1018,11 +1018,14 @@ version = "0.3.0"
 dependencies = [
  "anyhow",
  "brush-process",
+ "brush-render",
  "brush-vfs",
  "clap",
+ "env_logger",
  "humantime",
  "indicatif 0.18.0",
  "log",
+ "tokio",
  "tokio-stream",
  "tracing",
 ]

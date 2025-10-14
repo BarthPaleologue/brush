@@ -1,7 +1,9 @@
 use crate::{BrushVfs, VfsConstructError};
+#[cfg(feature = "file-dialogs")]
 use rrfd::PickFileError;
 use serde::Deserialize;
 use std::{path::Path, str::FromStr};
+#[cfg(any(feature = "file-dialogs", target_family = "wasm"))]
 use tokio::io::BufReader;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -30,8 +32,12 @@ impl FromStr for DataSource {
 use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum DataSourceError {
+    #[cfg(feature = "file-dialogs")]
     #[error(transparent)]
     FilePicking(#[from] PickFileError),
+    #[cfg(not(feature = "file-dialogs"))]
+    #[error("File picking is not available in this build")]
+    FilePickingUnavailable,
     #[error(transparent)]
     VfsError(#[from] VfsConstructError),
     #[cfg(not(target_family = "wasm"))]
@@ -47,20 +53,31 @@ impl DataSource {
     pub async fn into_vfs(self) -> Result<BrushVfs, DataSourceError> {
         match self {
             Self::PickFile => {
-                let reader = BufReader::new(rrfd::pick_file().await?);
-                log::info!("Got file reader");
-                Ok(BrushVfs::from_reader(reader).await?)
+                #[cfg(feature = "file-dialogs")]
+                {
+                    let reader = BufReader::new(rrfd::pick_file().await?);
+                    log::info!("Got file reader");
+                    Ok(BrushVfs::from_reader(reader).await?)
+                }
+                #[cfg(not(feature = "file-dialogs"))]
+                {
+                    Err(DataSourceError::FilePickingUnavailable)
+                }
             }
             Self::PickDirectory => {
-                #[cfg(not(target_family = "wasm"))]
+                #[cfg(all(feature = "file-dialogs", not(target_family = "wasm")))]
                 {
                     let picked = rrfd::pick_directory().await?;
                     Ok(BrushVfs::from_path(&picked).await?)
                 }
-                #[cfg(target_family = "wasm")]
+                #[cfg(all(feature = "file-dialogs", target_family = "wasm"))]
                 {
                     let file_map = rrfd::wasm::pick_directory_files().await?;
                     Ok(BrushVfs::from_wasm_files(file_map)?)
+                }
+                #[cfg(not(feature = "file-dialogs"))]
+                {
+                    Err(DataSourceError::FilePickingUnavailable)
                 }
             }
             Self::Url(url) => Self::fetch_url(url).await,
