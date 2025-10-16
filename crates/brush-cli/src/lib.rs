@@ -33,6 +33,15 @@ pub struct Cli {
 }
 
 impl Cli {
+    pub fn parse_headless() -> Result<Self, Error> {
+        let mut cli = Self::parse();
+        if cli.with_viewer {
+            log::debug!("Forcing --with-viewer to false for headless execution");
+            cli.with_viewer = false;
+        }
+        cli.validate()
+    }
+
     pub fn validate(self) -> Result<Self, Error> {
         if !self.with_viewer && self.source.is_none() {
             return Err(Error::raw(

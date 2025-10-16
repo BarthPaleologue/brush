@@ -9,9 +9,13 @@ license.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["sync", "io-util"] }
 
+[features]
+default = ["desktop-dialogs"]
+desktop-dialogs = ["dep:rfd"]
+
 [target.'cfg(all(not(target_family = "wasm"), not(target_os = "android")))'.dependencies]
 tokio = { workspace = true, features = ["fs", "sync", "io-util"] }
-rfd = "0.15"
+rfd = { version = "0.15", optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21.1"

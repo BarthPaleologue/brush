@@ -8,10 +8,10 @@ license.workspace = true
 
 [dependencies]
 brush-render.path = "../brush-render"
-brush-train.path = "../brush-train"
-brush-dataset.path = "../brush-dataset"
-brush-vfs.path = "../brush-vfs"
-brush-serde.path = "../brush-serde"
+brush-train = { path = "../brush-train", default-features = false }
+brush-dataset = { path = "../brush-dataset", default-features = false }
+brush-vfs = { path = "../brush-vfs", default-features = false }
+brush-serde = { path = "../brush-serde", default-features = false }
 
 burn-wgpu.workspace = true
 
@@ -31,6 +31,15 @@ tracing.workspace = true
 tokio = { workspace = true, features = ["io-util", "rt"] }
 tokio-stream.workspace = true
 tokio_with_wasm.workspace = true
+
+[features]
+default = ["desktop-dialogs"]
+desktop-dialogs = [
+    "brush-vfs/desktop-dialogs",
+    "brush-dataset/desktop-dialogs",
+    "brush-serde/desktop-dialogs",
+    "brush-train/desktop-dialogs",
+]
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 
