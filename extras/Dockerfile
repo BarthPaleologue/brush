@@ -1,12 +1,13 @@
-# Simple docker file to run Brush. Note that as Brush has very few dependencies, you should be able to run
-# it on any system already.
-#
-# This image is for easier server deployments. Nb: This dockerfile explicitly installs nvidia drivers,
-# I haven't tested this on non nvidia GPUs. Alternatively, you should be able
-# to run with host drivers.
+# Simple docker file to run Brush headlessly. This image builds the CLI runner so the GPU
+# pipeline can execute without any windowing dependencies.
 FROM rust:1.86 AS builder
-RUN git clone https://github.com/ArthurBrussee/brush
-RUN cargo build --release --manifest-path ./brush/Cargo.toml
+WORKDIR /workspace
+COPY Cargo.toml Cargo.lock cubecl.toml dist-workspace.toml brush_blueprint.rbl ./
+COPY .cargo ./.cargo
+COPY crates ./crates
+COPY examples ./examples
+COPY extras ./extras
+RUN cargo build --release -p brush-runner
 
 FROM ubuntu:22.04
 
@@ -22,7 +23,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /workdir
-COPY --from=builder ./brush/target/release/brush_app /workdir
+COPY --from=builder /workspace/target/release/brush-runner /usr/local/bin/brush-runner
 WORKDIR /workdir
 
 # Below command creates home dir for 1000 UID user
@@ -31,4 +32,4 @@ RUN chown -R 1000:root /workdir && chmod -R 775 /workdir
 
 # Launch training.
 USER clouduser
-ENTRYPOINT ["./brush_app"]
+ENTRYPOINT ["brush-runner"]

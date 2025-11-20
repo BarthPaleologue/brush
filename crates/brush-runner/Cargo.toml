@@ -1,0 +1,23 @@
+[package]
+name = "brush-runner"
+edition.workspace = true
+version.workspace = true
+readme.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "brush-runner"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+brush-cli = { path = "../brush-cli", default-features = false }
+brush-process = { path = "../brush-process", default-features = false }
+brush-render.path = "../brush-render"
+env_logger.workspace = true
+log.workspace = true
+tokio = { workspace = true, features = ["io-util", "rt", "rt-multi-thread"] }
+
+[lints]
+workspace = true

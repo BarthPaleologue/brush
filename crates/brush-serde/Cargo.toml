@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 brush-render.path = "../brush-render"
-brush-vfs.path = "../brush-vfs"
+brush-vfs = { path = "../brush-vfs", default-features = false }
 brush-serde-macros.path = "../brush-serde-macros"
 
 burn.workspace = true
@@ -19,6 +19,10 @@ tokio-stream.workspace = true
 async-fn-stream.workspace = true
 web-time.workspace = true
 tokio_with_wasm.workspace = true
+
+[features]
+default = ["desktop-dialogs"]
+desktop-dialogs = ["brush-vfs/desktop-dialogs"]
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 tokio = { workspace = true, features = ["io-util", "macros", "rt"] }
