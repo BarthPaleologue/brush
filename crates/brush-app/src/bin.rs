@@ -1,10 +1,10 @@
 #![recursion_limit = "256"]
 
-use brush_process::process::process_stream;
 use brush_ui::app::App;
 
-use brush_cli::Cli;
+use brush_cli::{Cli, run_headless};
 use clap::Parser;
+use tokio::sync::oneshot;
 
 #[cfg(target_family = "windows")]
 fn is_console() -> bool {
@@ -41,6 +41,12 @@ fn main() -> Result<(), anyhow::Error> {
         .expect("Failed to set tracing subscriber");
     }
 
+    let Cli {
+        source,
+        with_viewer,
+        process,
+    } = args;
+
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -52,10 +58,10 @@ fn main() -> Result<(), anyhow::Error> {
                 .target(env_logger::Target::Stdout)
                 .init();
 
-            let (sender, args_receiver) = tokio::sync::oneshot::channel();
-            let _ = sender.send(args.process.clone());
+            if with_viewer {
+                let (sender, args_receiver) = oneshot::channel();
+                let _ = sender.send(process.clone());
 
-            if args.with_viewer {
                 let icon = eframe::icon_data::from_png_bytes(
                     &include_bytes!("../assets/icon-256.png")[..],
                 )
@@ -71,7 +77,7 @@ fn main() -> Result<(), anyhow::Error> {
                     ..Default::default()
                 };
 
-                if let Some(source) = args.source {
+                if let Some(source) = source.clone() {
                     context.start_new_process(source, args_receiver);
                 }
 
@@ -87,12 +93,11 @@ fn main() -> Result<(), anyhow::Error> {
                     Box::new(move |cc| Ok(Box::new(App::new(cc, context)))),
                 )?;
             } else {
-                let Some(source) = args.source else {
+                let Some(source) = source else {
                     panic!("Validation of args failed?");
                 };
-                let device = brush_render::burn_init_setup().await;
-                let stream = process_stream(source, args_receiver, device);
-                brush_cli::process_ui(stream, args.process).await?;
+
+                run_headless(source, process).await?;
             }
 
             anyhow::Result::<(), anyhow::Error>::Ok(())

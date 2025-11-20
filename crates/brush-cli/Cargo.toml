@@ -8,14 +8,21 @@ license.workspace = true
 [dependencies]
 indicatif.workspace = true
 clap.workspace = true
-brush-process.path = "../brush-process"
-brush-vfs.path = "../brush-vfs"
+brush-process = { path = "../brush-process", default-features = false }
+brush-vfs = { path = "../brush-vfs", default-features = false }
+brush-render.path = "../brush-render"
 
 tracing.workspace = true
 tokio-stream.workspace = true
 humantime.workspace = true
 log.workspace = true
 anyhow.workspace = true
+env_logger.workspace = true
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync"] }
+
+[[bin]]
+name = "brush-cli"
+path = "src/main.rs"
 
 [lints]
 workspace = true

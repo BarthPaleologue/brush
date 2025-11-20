@@ -1,11 +1,11 @@
 #![allow(unused_imports)]
 
 pub struct VisualizeTools {
-    #[cfg(not(target_family = "wasm"))]
+    #[cfg(all(not(target_family = "wasm"), feature = "rerun"))]
     rec: rerun::RecordingStream,
 }
 
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "rerun"))]
 mod visualize_tools_impl {
     use std::sync::Arc;
 
@@ -328,7 +328,7 @@ mod visualize_tools_impl {
     }
 }
 
-#[cfg(target_family = "wasm")]
+#[cfg(any(target_family = "wasm", not(feature = "rerun")))]
 mod visualize_tools_impl {
     use std::sync::Arc;
 

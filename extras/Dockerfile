@@ -6,7 +6,7 @@
 # to run with host drivers.
 FROM rust:1.86 AS builder
 RUN git clone https://github.com/ArthurBrussee/brush
-RUN cargo build --release --manifest-path ./brush/Cargo.toml
+RUN cargo build --release --manifest-path ./brush/Cargo.toml -p brush-cli
 
 FROM ubuntu:22.04
 
@@ -22,7 +22,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /workdir
-COPY --from=builder ./brush/target/release/brush_app /workdir
+COPY --from=builder ./brush/target/release/brush-cli /workdir
 WORKDIR /workdir
 
 # Below command creates home dir for 1000 UID user
@@ -31,4 +31,4 @@ RUN chown -R 1000:root /workdir && chmod -R 775 /workdir
 
 # Launch training.
 USER clouduser
-ENTRYPOINT ["./brush_app"]
+ENTRYPOINT ["./brush-cli"]
